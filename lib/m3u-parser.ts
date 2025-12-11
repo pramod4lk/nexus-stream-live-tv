@@ -23,9 +23,10 @@ export async function fetchAndParseM3U(url: string): Promise<CountryGroup[]> {
         let currentChannel: Partial<Channel> = {};
 
         for (const line of lines) {
-            if (line.startsWith('#EXTINF:')) {
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('#EXTINF:')) {
                 // Parse metadata
-                const info = line.substring(8);
+                const info = trimmedLine.substring(8);
                 const parts = info.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/); // Split by comma, ignoring commas in quotes
 
                 // Extract attributes
@@ -41,25 +42,18 @@ export async function fetchAndParseM3U(url: string): Promise<CountryGroup[]> {
                 // raw name is usually the last part after the comma
                 const rawName = parts[parts.length - 1]?.trim() || '';
 
-                // Try to guess country from group-title or other hints if simplest appraoch is insufficient,
-                // but for iptv-org, group-title usually contains useful categorization.
-                // However, iptv-org/iptv main list is massive and categorized. 
-                // The user link is https://iptv-org.github.io/iptv/index.m3u which is the "grouped by country" list usually? 
-                // Actually index.m3u is the main one. Let's see. 
-                // Often group-title="CountryName" or "Category". 
-
                 currentChannel = {
                     id: tvgId || rawName,
                     name: rawName,
                     logo: tvgLogo,
                     category: groupTitle || 'Uncategorized',
-                    country: groupTitle || 'Uncategorized', // Using group-title as country proxy for now as it's common
+                    country: groupTitle || 'Uncategorized',
                 };
-            } else if (line.startsWith('http')) {
+            } else if (trimmedLine.startsWith('http')) {
                 if (currentChannel.name) {
                     channels.push({
                         ...currentChannel,
-                        url: line.trim(),
+                        url: trimmedLine,
                     } as Channel);
                     currentChannel = {};
                 }

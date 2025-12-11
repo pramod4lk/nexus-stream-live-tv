@@ -1,11 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
+import Hls from 'hls.js';
 import { Play, AlertCircle } from 'lucide-react';
-
-// Dynamically import ReactPlayer to avoid SSR issues
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
 
 interface PlayerProps {
     url: string;
@@ -13,7 +10,76 @@ interface PlayerProps {
 }
 
 export default function Player({ url, playing }: PlayerProps) {
+    const videoRef = React.useRef<HTMLVideoElement>(null);
     const [error, setError] = useState(false);
+    const hlsRef = React.useRef<any>(null);
+
+    React.useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        // Reset error state when url changes
+        setError(false);
+
+        const initPlayer = () => {
+            if (Hls.isSupported() && url.toLowerCase().includes('.m3u8')) {
+                // Destroy previous instance if it exists
+                if (hlsRef.current) {
+                    hlsRef.current.destroy();
+                }
+
+                const hls = new Hls({
+                    enableWorker: false,
+                    lowLatencyMode: true,
+                });
+
+                hlsRef.current = hls;
+                hls.loadSource(url);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    if (playing) {
+                        video.play().catch(e => console.log("Autoplay blocked:", e));
+                    }
+                });
+
+                hls.on(Hls.Events.ERROR, (event: any, data: any) => {
+                    if (data.fatal) {
+                        console.error('HLS Fatal Error:', data);
+                        setError(true);
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari)
+                video.src = url;
+            } else {
+                // Regular video
+                video.src = url;
+            }
+        };
+
+        if (url) {
+            initPlayer();
+        }
+
+        return () => {
+            if (hlsRef.current) {
+                hlsRef.current.destroy();
+            }
+        };
+    }, [url]);
+
+    // Handle playing prop changes separately
+    React.useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (playing) {
+            video.play().catch(() => { });
+        } else {
+            video.pause();
+        }
+    }, [playing]);
 
     return (
         <div className="relative w-full h-full group">
@@ -35,13 +101,12 @@ export default function Player({ url, playing }: PlayerProps) {
                         </div>
                     </div>
                 ) : (
-                    <ReactPlayer
-                        url={url}
-                        playing={playing}
+                    <video
+                        ref={videoRef}
+                        className="w-full h-full object-contain"
                         controls
-                        width="100%"
-                        height="100%"
-                        onError={() => setError(true)}
+                        playsInline
+                        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E"
                     />
                 )}
 
