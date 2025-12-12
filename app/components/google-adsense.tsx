@@ -12,7 +12,7 @@ export default function GoogleAdsense({ pId }: Props) {
     return (
         <Script
             async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${pId}`}
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${pId.startsWith("ca-") ? pId : `ca-${pId}`}`}
             crossOrigin="anonymous"
             strategy="afterInteractive"
         />
