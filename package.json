@@ -9,9 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "hls.js": "^1.6.15",
     "lucide-react": "^0.559.0",
-    "next": "16.0.8",
+    "next": "^16.0.8",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "react-player": "^3.4.0"
