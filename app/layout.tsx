@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import GoogleAdsense from "./components/google-adsense";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         {children}
         <Analytics />
+        <GoogleAdsense pId="pub-4825924547683475" />
       </body>
     </html>
   );
